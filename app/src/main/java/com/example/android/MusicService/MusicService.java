@@ -10,107 +10,106 @@ import android.os.IBinder;
 
 public class MusicService extends Service {
 
-	@SuppressWarnings("unused")
-	private final String TAG = "MusicService";
+    private static final int NOTIFICATION_ID = 1;
+    @SuppressWarnings("unused")
+    private final String TAG = "MusicService";
+    private MediaPlayer mPlayer;
+    private int mStartID;
 
-	private static final int NOTIFICATION_ID = 1;
-	private MediaPlayer mPlayer;
-	private int mStartID;
+    @Override
+    public void onCreate() {
+        super.onCreate();
 
-	@Override
-	public void onCreate() {
-		super.onCreate();
+        // Set up the Media Player
+        mPlayer = MediaPlayer.create(this, R.raw.badnews);
 
-		// Set up the Media Player
-		mPlayer = MediaPlayer.create(this, R.raw.badnews);
+        if (null != mPlayer) {
 
-		if (null != mPlayer) {
+            mPlayer.setLooping(false);
 
-			mPlayer.setLooping(false);
+            // Stop Service when music has finished playing
+            mPlayer.setOnCompletionListener(new OnCompletionListener() {
 
-			// Stop Service when music has finished playing
-			mPlayer.setOnCompletionListener(new OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
 
-				@Override
-				public void onCompletion(MediaPlayer mp) {
+                    // stop Service if it was started with this ID
+                    // Otherwise let other start commands proceed
+                    stopSelf(mStartID);
 
-					// stop Service if it was started with this ID
-					// Otherwise let other start commands proceed
-					stopSelf(mStartID);
+                }
+            });
+        }
 
-				}
-			});
-		}
+        // Create a notification area notification so the user
+        // can get back to the MusicServiceClient
 
-		// Create a notification area notification so the user 
-		// can get back to the MusicServiceClient
-		
-		final Intent notificationIntent = new Intent(getApplicationContext(),
-				MusicServiceClient.class);
-		final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-				notificationIntent, 0);
-		/*A PendingIntent is a token that you give to a foreign application
+        final Intent notificationIntent = new Intent(getApplicationContext(),
+                MusicServiceClient.class);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
+                notificationIntent, 0);
+        /*A PendingIntent is a token that you give to a foreign application
 		(e.g. NotificationManager , AlarmManager , Home Screen AppWidgetManager ,
 		or other 3rd party applications), which allows the
 		foreign application to use your application's permissions to execute a
 		predefined piece of code*/
-		final Notification notification = new Notification.Builder(
-				getApplicationContext())
-				.setSmallIcon(android.R.drawable.ic_media_play)
-				.setOngoing(true).setContentTitle("Music Playing")
-				.setContentText("Click to Access Music Player")
-				.setContentIntent(pendingIntent).build();
+        final Notification notification = new Notification.Builder(
+                getApplicationContext())
+                .setSmallIcon(android.R.drawable.ic_media_play)
+                .setOngoing(true).setContentTitle("Music Playing")
+                .setContentText("Click to Access Music Player")
+                .setContentIntent(pendingIntent).build();
 
-		// Put this Service in a foreground state, so it won't 
-		// readily be killed by the system  
-		startForeground(NOTIFICATION_ID, notification);
+        // Put this Service in a foreground state, so it won't
+        // readily be killed by the system
+        startForeground(NOTIFICATION_ID, notification);
 
-	}
+    }
 
-	
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startid) {
 
-		if (null != mPlayer) {
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startid) {
 
-			// ID for this start command
-			mStartID = startid;
+        if (null != mPlayer) {
 
-			if (mPlayer.isPlaying()) {
+            // ID for this start command
+            mStartID = startid;
 
-				// Rewind to beginning of song
-				mPlayer.seekTo(0);
+            if (mPlayer.isPlaying()) {
 
-			} else {
+                // Rewind to beginning of song
+                mPlayer.seekTo(0);
 
-				// Start playing song
-				mPlayer.start();
+            } else {
 
-			}
+                // Start playing song
+                mPlayer.start();
 
-		}
+            }
 
-		// Don't automatically restart this Service if it is killed
-		return START_NOT_STICKY;
-	}
+        }
 
-	@Override
-	public void onDestroy() {
+        // Don't automatically restart this Service if it is killed
+        return START_NOT_STICKY;
+    }
 
-		if (null != mPlayer) {
+    @Override
+    public void onDestroy() {
 
-			mPlayer.stop();
-			mPlayer.release();
+        if (null != mPlayer) {
 
-		}
-	}
+            mPlayer.stop();
+            mPlayer.release();
 
-	// Can't bind to this Service
-	@Override
-	public IBinder onBind(Intent intent) {
+        }
+    }
 
-		return null;
+    // Can't bind to this Service
+    @Override
+    public IBinder onBind(Intent intent) {
 
-	}
+        return null;
+
+    }
 
 }

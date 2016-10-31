@@ -4,7 +4,7 @@
 
     <application
         android:allowBackup="false"
-        android:label="@string/app_name" >
+        android:label="@string/app_name">
         <activity
             android:name="com.example.android.MusicService.MusicServiceClient"
             android:label="@string/app_name"
